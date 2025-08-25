@@ -67,6 +67,7 @@ function dedupe(items) {
 }
 
 // compact, line-based input (saves tokens)
+//test
 function buildCompactUserInput(map) {
   const lines = [];
   for (const [sym, items] of Object.entries(map)) {
