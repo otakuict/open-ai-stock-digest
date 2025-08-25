@@ -82,18 +82,19 @@ function buildCompactUserInput(map) {
 async function summarize(allTickers) {
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-  const system = "Return concise stock-moving bullets. No preamble.";
+  const system =
+    "คุณคือผู้สรุปข่าวการเงิน ตอบเป็นภาษาไทยเท่านั้น ไม่ต้องมีคำอธิบายเกินจำเป็น";
   const user = [
-    "Summarize headlines per ticker.",
-    "For each ticker: 3 bullets max; ≤40 words each bullet.",
-    "Focus: earnings, guidance, deals, regulation, litigation, product/AI, execs, macro.",
-    "Cite with [n] linking to the URL in that bullet.",
-    "Format exactly:",
+    "สรุปพาดหัวข่าวของแต่ละบริษัท",
+    "สำหรับแต่ละ TICKER: ไม่เกิน 3 bullet แต่ละ bullet ไม่เกิน 40 คำ",
+    "เน้นเฉพาะข่าวที่อาจมีผลต่อราคาหุ้น เช่น กำไร ขาดทุน ดีล กฎหมาย คดี ผู้บริหารใหม่ เทคโนโลยีใหม่ เศรษฐกิจ",
+    "ใส่แหล่งอ้างอิงเป็น [n] ตาม URL",
+    "รูปแบบ:",
     "",
     "TICKER",
-    "• bullet text [1]",
-    "• bullet text [2]",
-    "• bullet text [3]",
+    "• เนื้อหา [1]",
+    "• เนื้อหา [2]",
+    "• เนื้อหา [3]",
     "",
     "HEADLINES:",
     buildCompactUserInput(allTickers),
@@ -102,7 +103,7 @@ async function summarize(allTickers) {
   const resp = await client.chat.completions.create({
     model: "gpt-4o-mini",
     temperature: 0.1,
-    max_tokens: 240, // hard cap
+    max_tokens: 240,
     messages: [
       { role: "system", content: system },
       { role: "user", content: user },
