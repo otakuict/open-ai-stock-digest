@@ -1,0 +1,60 @@
+service: stock-digest
+frameworkVersion: "3"
+
+provider:
+  name: aws
+  region: ap-southeast-1
+  runtime: nodejs20.x
+  stage: dev
+  architecture: arm64
+  memorySize: 128
+  timeout: 15
+  environment:
+    OPENAI_API_KEY: ${env:OPENAI_API_KEY}
+    LINE_CHANNEL_ACCESS_TOKEN: ${env:LINE_CHANNEL_ACCESS_TOKEN}
+    LINE_USER_ID: ${env:LINE_USER_ID}
+
+functions:
+  digest:
+    handler: index.handler
+    package:
+      patterns:
+        - index.mjs
+        - node_modules/**
+
+resources:
+  Resources:
+    DigestInvokeRoleForScheduler:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${sls:stage}-digest-scheduler-role
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: scheduler.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: allowInvokeLambda
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - lambda:InvokeFunction
+                  Resource:
+                    - arn:aws:lambda:${aws:region}:${aws:accountId}:function:${sls:stage}-${self:service}-digest
+
+    DailyDigestSchedule:
+      Type: AWS::Scheduler::Schedule
+      Properties:
+        Name: ${sls:stage}-daily-digest-bkk
+        FlexibleTimeWindow:
+          Mode: OFF
+        ScheduleExpression: cron(0 9 ? * MON-FRI *)
+        ScheduleExpressionTimezone: Asia/Bangkok
+        Target:
+          Arn: arn:aws:lambda:${aws:region}:${aws:accountId}:function:${sls:stage}-${self:service}-digest
+          RoleArn:
+            Fn::GetAtt: [DigestInvokeRoleForScheduler, Arn]

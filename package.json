@@ -1,0 +1,9 @@
+{
+  "name": "stock-news-digest",
+  "type": "module",
+  "version": "1.0.0",
+  "dependencies": {
+    "fast-xml-parser": "^4.4.1",
+    "openai": "^4.56.0"
+  }
+}
